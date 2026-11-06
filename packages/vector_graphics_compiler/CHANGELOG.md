@@ -1,3 +1,7 @@
+## 1.3.5
+
+* Fixes paths with a single straight line being drawn as a line when filled.
+
 ## 1.3.4
 
 * Fixes `em` units in text `x`, `y`, `dx` and `dy` being treated as pixels.

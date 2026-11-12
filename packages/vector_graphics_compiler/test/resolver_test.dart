@@ -28,6 +28,48 @@ void main() {
     expect(nodes.last.paint, const Paint(fill: Fill(color: Color(0xFFFF0000))));
   });
 
+  test('the initial stroke width scales like an explicit one', () {
+    final Node node = parseToNodeTree('''
+<svg viewBox="0 0 200 200">
+  <g transform="scale(4)">
+    <path d="M0 0H10" stroke="red"/>
+    <path d="M0 5H10" stroke="red" stroke-width="1"/>
+    <path d="M0 10H10" stroke="red" stroke-width="2"/>
+  </g>
+  <path d="M0 20H10" stroke="red"/>
+</svg>''');
+    final Node resolvedNode = node.accept(ResolvingVisitor(), AffineMatrix.identity);
+    final List<ResolvedPathNode> nodes = queryChildren<ResolvedPathNode>(resolvedNode);
+
+    expect(nodes.map((ResolvedPathNode node) => node.paint.stroke!.width), <double?>[
+      4,
+      4,
+      8,
+      null,
+    ]);
+  });
+
+  test('a single line has nothing to fill', () {
+    List<ResolvedPathNode> resolve(String shape) {
+      final Node node = parseToNodeTree('<svg viewBox="0 0 200 200">$shape</svg>');
+      final Node resolvedNode = node.accept(ResolvingVisitor(), AffineMatrix.identity);
+      return queryChildren<ResolvedPathNode>(resolvedNode);
+    }
+
+    expect(resolve('<path d="M0 0H10"/>'), isEmpty);
+    expect(resolve('<path d="M0 0L10 10" fill="red"/>'), isEmpty);
+    expect(resolve('<line x1="0" y1="0" x2="10" y2="10"/>'), isEmpty);
+    expect(resolve('<polyline points="0,0 10,10"/>'), isEmpty);
+    expect(resolve('<path d="M0 0H10" stroke="red" stroke-width="0"/>'), isEmpty);
+
+    final ResolvedPathNode stroked = resolve('<path d="M0 0H10" stroke="red"/>').single;
+    expect(stroked.paint.fill, isNull);
+    expect(stroked.paint.stroke, isNotNull);
+
+    expect(resolve('<path d="M0 0H10V10z"/>').single.paint.fill, isNotNull);
+    expect(resolve('<path d="M0 0H10M0 5H10V10z"/>').single.paint.fill, isNotNull);
+  });
+
   test('group opacity node inheritence', () {
     final Node node = parseToNodeTree('''
 <svg viewBox="0 0 200 200">

@@ -300,7 +300,7 @@ void main() {
 
   group('marker vertices and orientation', () {
     const defs = '''
-<defs><marker id="a" overflow="visible" markerUnits="userSpaceOnUse" orient="auto"><path d="M0 0h2"/></marker></defs>''';
+<defs><marker id="a" overflow="visible" markerUnits="userSpaceOnUse" orient="auto"><path d="M0 0h2" stroke="black"/></marker></defs>''';
 
     LineToCommand tip(Path path) => path.commands.elementAt(1) as LineToCommand;
 

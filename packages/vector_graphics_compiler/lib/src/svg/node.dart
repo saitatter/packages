@@ -478,17 +478,29 @@ class PathNode extends AttributedNode {
   /// The description of the geometry this leaf node draws.
   final Path path;
 
+  /// Whether [path] is a single straight line.
+  bool get _isSingleLine {
+    final Iterable<PathCommand> commands = path.commands;
+    return commands.length == 2 &&
+        commands.first is MoveToCommand &&
+        commands.last is LineToCommand;
+  }
+
   /// Compute the paint used by this Path.
   ///
   /// The [context] resolves `context-fill` and `context-stroke` paints.
   Paint? computePaint(Rect bounds, AffineMatrix transform, {SvgPaintContext? context}) {
     final Stroke? stroke = attributes.stroke?.toStroke(bounds, transform, context: context);
-    final Fill? fill = attributes.fill?.toFill(
-      bounds,
-      transform,
-      defaultColor: Color.opaqueBlack,
-      context: context,
-    );
+    // A line has no area to fill, but Flutter draws any path that is a single
+    // line as a line, regardless of the paint style.
+    final Fill? fill = _isSingleLine
+        ? null
+        : attributes.fill?.toFill(
+            bounds,
+            transform,
+            defaultColor: Color.opaqueBlack,
+            context: context,
+          );
     if (fill == null && stroke == null) {
       return null;
     }
